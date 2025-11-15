@@ -53,7 +53,7 @@
             <input type="file" accept=".ipa" id="ipa"/>
             <svg class="icon" viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
             <div class="txt">Drop IPA or tap to select</div>
-            <div class="hint">Max 500 MB • OTA link generated automatically</div>
+            <div class="hint">Max 2 GB • OTA link generated automatically</div>
         </div>
         <div id="info" class="info" style="display:none;"></div>
         <div class="prog" id="prog"><div class="bar" id="bar"></div></div>
@@ -68,7 +68,7 @@
         <a href="#" id="install" class="install" style="display:none;">Install Now</a>
 
         <div class="warn">
-            <strong>Note:</strong> Unsigned IPAs need a signing tool (AltStore, Sideloadly, TrollStore, etc.).
+            <strong>Note:</strong> Unsigned IPAs need a signing tool (AltStore, Sideloadly, TrollStore, etc.) or a developer certificate.
         </div>
 
         <p style="font-size:13px;color:var(--muted);margin-top:16px;">
@@ -82,11 +82,9 @@
 </div>
 
 <script>
-/* ---------- Helpers ---------- */
 const $ = s => document.querySelector(s);
 const fmt = b => {if(!b)return'0 B';const k=1024,s=['B','KB','MB','GB'],i=Math.floor(Math.log(b)/Math.log(k));return parseFloat((b/Math.pow(k,i)).toFixed(2))+' '+s[i];};
 
-/* ---------- Drag & Drop ---------- */
 const drop = $('#drop'), ipa = $('#ipa'), up = $('#up'), info = $('#info'), prog = $('#prog'), bar = $('#bar');
 const res = $('#res'), otaLink = $('#otaLink'), direct = $('#direct'), copy = $('#copy'), install = $('#install');
 
@@ -109,28 +107,25 @@ function handle(files){
     up.disabled=false;
 }
 
-/* ---------- Upload & OTA ---------- */
 up.addEventListener('click', async ()=>{
     if(!file)return;
     up.disabled=true; up.textContent='Uploading…';
     prog.style.display='block'; bar.style.width='0%';
 
-    const fd = new FormData(); fd.append('file',file);
-
     try{
-        // 1. Upload IPA to a free file host that returns direct URL
-        //    We use **file.io** (no signup, 2 GB, 14-day link)
+        // 1. Upload IPA to file.io (2 GB max, 14-day links, no signup)
+        const fd = new FormData(); fd.append('file',file);
         const r = await fetch('https://file.io/?expires=14d', {method:'POST',body:fd});
         const j = await r.json();
-        if(!j.success) throw new Error('Upload failed');
-        ipaUrl = j.link;                               // direct IPA URL
-        direct.textContent = ipaUrl;
+        if(!j.success) throw new Error('IPA upload failed');
+        ipaUrl = j.link; direct.textContent = ipaUrl;
+        bar.style.width='50%';
 
-        // 2. Prompt for bundle ID (you can replace with auto-extract later)
-        const user = prompt('Enter Bundle ID (e.g. com.example.myapp):', bundle);
+        // 2. Prompt for bundle ID
+        const user = prompt('Enter Bundle ID (e.g., com.example.myapp):', bundle);
         if(user) bundle = user;
 
-        // 3. Build manifest.plist as a data-URI (no extra file needed)
+        // 3. Generate manifest.plist from template
         const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -156,11 +151,16 @@ up.addEventListener('click', async ()=>{
 </dict>
 </plist>`.trim();
 
+        // 4. Upload manifest.plist
         const plistBlob = new Blob([plist],{type:'application/xml'});
-        const plistURL = URL.createObjectURL(plistBlob);
+        const plistFd = new FormData(); plistFd.append('file',plistBlob,'manifest.plist');
+        const pr = await fetch('https://file.io/?expires=14d', {method:'POST',body:plistFd});
+        const pj = await pr.json();
+        if(!pj.success) throw new Error('Manifest upload failed');
+        const manifestUrl = pj.link;
 
-        // 4. OTA link
-        const ota = `itms-services://?action=download-manifest&url=${encodeURIComponent(plistURL)}`;
+        // 5. Create OTA link
+        const ota = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestUrl)}`;
         otaLink.textContent = ota;
         install.href = ota;
         install.style.display='inline-block';
@@ -169,7 +169,7 @@ up.addEventListener('click', async ()=>{
         setTimeout(()=>{prog.style.display='none';},600);
 
     }catch(e){
-        alert('Upload failed – try again or use Diawi/InstallOnAir');
+        alert('Upload failed – try Diawi/InstallOnAir or check console');
         console.error(e);
     }finally{
         up.textContent='Upload & Generate OTA';
@@ -177,7 +177,6 @@ up.addEventListener('click', async ()=>{
     }
 });
 
-/* ---------- Copy ---------- */
 copy.addEventListener('click',()=>{
     navigator.clipboard.writeText(otaLink.textContent);
     copy.textContent='Copied!';
