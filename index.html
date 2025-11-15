@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ShadowDrop OTA</title>
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111111'/><path d='M50 30c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 22c-4 0-8-4-8-8s4-8 8-8 8 4 8 8-4 8-8 8z' fill='%23ffffff'/></svg>" />
+    <style>
+        :root {
+            --bg: #111111;
+            --card: #1e1e1e;
+            --accent: #007aff;
+            --text: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: var(--card);
+            border-radius: 20px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .logo svg {
+            width: 48px;
+            height: 48px;
+            fill: var(--text);
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+        .card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .upload-area {
+            border: 2px dashed var(--text-muted);
+            border-radius: 14px;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(0,122,255,0.05);
+        }
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(0,122,255,0.1);
+        }
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            fill: var(--text-muted);
+        }
+        .upload-text {
+            font-size: 16px;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .upload-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 17px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(0,122,255,0.3);
+        }
+        .btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
+        .file-info {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+        .progress {
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin: 16px 0;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .result {
+            display: none;
+            margin-top: 20px;
+        }
+        .result-link {
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 12px 0;
+            color: var(--accent);
+        }
+        .copy-btn {
+            background: #333;
+            color: var(--text);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .install-btn {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            text-decoration: none;
+            margin: 16px 0;
+            box-shadow: 0 2px 6px rgba(0,122,255,0.3);
+        }
+        .warning {
+            font-size: 13px;
+            color: #ff9f0a;
+            margin: 16px 0;
+            padding: 12px;
+            background: rgba(255,159,10,0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255,159,10,0.3);
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f2f2f7;
+                --card: #ffffff;
+                --text: #000000;
+                --text-muted: #666666;
+            }
+            .result-link { background: #f0f0f0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 100 100">
+                    <rect width="100" height="100" rx="20" fill="currentColor" opacity="0.1"/>
+                    <path d="M50 30c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 22c-4 0-8-4-8-8s4-8 8-8 8 4 8 8-4 8-8 8z" fill="currentColor"/>
+                </svg>
+            </div>
+            <h1>ShadowDrop OTA</h1>
+            <p class="subtitle">Upload IPA • Auto-Generate OTA Install • No Signup</p>
+        </div>
+
+        <div class="card">
+            <div class="upload-area" id="dropZone">
+                <input type="file" accept=".ipa" id="ipaInput" />
+                <svg class="upload-icon" viewBox="0 0 24 24">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                </svg>
+                <div class="upload-text">Drop IPA here or tap to select</div>
+                <div class="upload-hint">Max 500 MB • Full OTA install link</div>
+            </div>
+
+            <div id="fileDetails" class="file-info" style="display:none;"></div>
+
+            <div class="progress" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <button class="btn" id="uploadBtn" disabled>Upload & Generate OTA</button>
+        </div>
+
+        <div class="card result" id="resultCard">
+            <h3>OTA Install Ready!</h3>
+            <p>Open this link on your iPhone/iPad:</p>
+            <div class="result-link" id="installLink"></div>
+            <button class="copy-btn" id="copyBtn">Copy Install Link</button>
+
+            <a href="#" id="installBtn" class="install-btn" style="display:none;">Install App Now</a>
+
+            <div class="warning">
+                <strong>Note:</strong> Unsigned apps require a signing service (AltStore, Sideloadly, etc.) or a developer certificate. This link works with <code>itms-services</code> OTA.
+            </div>
+
+            <p style="font-size:13px; color:var(--text-muted); margin-top:16px;">
+                Direct IPA: <span id="directLink" style="color:var(--accent);"></span>
+            </p>
+        </div>
+
+        <div class="footer">
+            ShadowDrop OTA • Free & Anonymous • Powered by <a href="https://pagedrop.io" target="_blank" style="color:var(--accent);">PageDrop</a>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const ipaInput = document.getElementById('ipaInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileDetails = document.getElementById('fileDetails');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const resultCard = document.getElementById('resultCard');
+        const installLink = document.getElementById('installLink');
+        const directLink = document.getElementById('directLink');
+        const copyBtn = document.getElementById('copyBtn');
+        const installBtn = document.getElementById('installBtn');
+
+        let selectedFile = null;
+        let uploadedIpaUrl = '';
+        let appName = '';
+        let bundleId = 'com.unknown.app';
+
+        // Drag & drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        ipaInput.addEventListener('change', () => handleFiles(ipaInput.files));
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+            if (!file.name.toLowerCase().endsWith('.ipa')) {
+                alert('Please select an .ipa file');
+                return;
+            }
+            selectedFile = file;
+            appName = file.name.replace('.ipa', '');
+            fileDetails.textContent = `${file.name} (${formatBytes(file.size)})`;
+            fileDetails.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Upload & Generate OTA
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                // Step 1: Upload IPA to PageDrop
+                const ipaResponse = await fetch('https://api.pagedrop.io/v1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const ipaData = await ipaResponse.json();
+                if (!ipaData.url) throw new Error('IPA upload failed');
+                uploadedIpaUrl = ipaData.url;
+
+                // Simulate bundle ID extraction (in real app, parse Info.plist from IPA)
+                // For demo, use filename or prompt
+                bundleId = prompt('Enter Bundle ID (e.g., com.example.myapp):', bundleId) || bundleId;
+
+                // Step 2: Generate manifest.plist content
+                const manifestContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>items</key>
+    <array>
+        <dict>
+            <key>assets</key>
+            <array>
+                <dict>
+                    <key>kind</key>
+                    <string>software-package</string>
+                    <key>url</key>
+                    <string>${uploadedIpaUrl}</string>
+                </dict>
+            </array>
+            <key>metadata</key>
+            <dict>
+                <key>bundle-identifier</key>
+                <string>${bundleId}</string>
+                <key>kind</key>
+                <string>software</string>
+                <key>title</key>
+                <string>${appName}</string>
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>`;
+
+                // Step 3: Upload manifest.plist
+                const manifestBlob = new Blob([manifestContent], { type: 'application/xml' });
+                const manifestForm = new FormData();
+                manifestForm.append('file', manifestBlob, 'manifest.plist');
+
+                const manifestResponse = await fetch('https://api.pagedrop.io/v1/upload', {
+                    method: 'POST',
+                    body: manifestForm
+                });
+                const manifestData = await manifestResponse.json();
+                if (!manifestData.url) throw new Error('Manifest upload failed');
+                const manifestUrl = manifestData.url;
+
+                // Step 4: Generate OTA install link
+                const otaUrl = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestUrl)}`;
+
+                // Update UI
+                installLink.textContent = otaUrl;
+                directLink.textContent = uploadedIpaUrl;
+                installBtn.href = otaUrl;
+                installBtn.style.display = 'inline-block';
+                resultCard.style.display = 'block';
+                progressBar.style.width = '100%';
+                setTimeout(() => progressContainer.style.display = 'none', 600);
+
+            } catch (err) {
+                alert('Upload failed. Try Diawi or InstallOnAir for OTA.');
+                console.error(err);
+            } finally {
+                uploadBtn.textContent = 'Upload & Generate OTA';
+                uploadBtn.disabled = false;
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(installLink.textContent);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => copyBtn.textContent = 'Copy Install Link', 2000);
+        });
+    </script>
+</body>
+</html>
