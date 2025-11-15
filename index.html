@@ -3,518 +3,135 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>ShadowDrop Pro</title>
+    <title>ShadowDrop OTA</title>
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111111'/><path d='M50 30c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 22c-4 0-8-4-8-8s4-8 8-8 8 4 8 8-4 8-8 8z' fill='%23ffffff'/></svg>" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root {
-            --bg: #111111;
-            --card: #1e1e1e;
-            --accent: #007aff;
-            --text: #ffffff;
-            --text-muted: #aaaaaa;
-            --border: #333333;
-            --success: #30d158;
-            --danger: #ff453a;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            line-height: 1.5;
-            overflow: hidden;
-        }
-        .notch {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 180px;
-            height: 32px;
-            background: var(--bg);
-            border-radius: 0 0 24px 24px;
-            z-index: 1000;
-        }
-        .container {
-            flex: 1;
-            padding: 20px;
-            padding-top: 50px;
-            max-width: 420px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo {
-            width: 70px;
-            height: 70px;
-            background: var(--card);
-            border-radius: 18px;
-            margin: 0 auto 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        .logo svg {
-            width: 42px;
-            height: 42px;
-            fill: var(--text);
-        }
-        h1 {
-            font-size: 22px;
-            font-weight: 600;
-        }
-        .subtitle {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-        .tabs {
-            display: flex;
-            background: var(--card);
-            border-radius: 14px;
-            padding: 4px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            font-size: 15px;
-            font-weight: 500;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tab.active {
-            background: var(--accent);
-            color: white;
-        }
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .card {
-            background: var(--card);
-            border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 6px;
-            color: var(--text-muted);
-        }
-        input[type="text"], input[type="password"], input[type="file"] {
-            width: 100%;
-            padding: 12px 16px;
-            background: #2a2a2a;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 16px;
-        }
-        input[type="file"] {
-            padding: 10px 0;
-        }
-        .btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            font-size: 17px;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 10px;
-        }
-        .btn:disabled {
-            background: #444;
-            cursor: not-allowed;
-        }
-        .btn.danger {
-            background: var(--danger);
-        }
-        .upload-area {
-            border: 2px dashed var(--text-muted);
-            border-radius: 14px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .upload-area:hover {
-            border-color: var(--accent);
-            background: rgba(0,122,255,0.05);
-        }
-        .upload-area.dragover {
-            border-color: var(--accent);
-            background: rgba(0,122,255,0.1);
-        }
-        .file-info {
-            margin-top: 12px;
-            font-size: 13px;
-            color: var(--text-muted);
-            word-break: break-all;
-        }
-        .progress {
-            height: 4px;
-            background: #333;
-            border-radius: 2px;
-            margin: 16px 0;
-            overflow: hidden;
-            display: none;
-        }
-        .progress-bar {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .result-link {
-            background: #2a2a2a;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 14px;
-            word-break: break-all;
-            margin: 12px 0;
-            color: var(--accent);
-        }
-        .copy-btn {
-            background: #333;
-            color: var(--text);
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-        .group-card {
-            background: #2a2a2a;
-            border-radius: 14px;
-            padding: 14px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .group-name {
-            font-weight: 500;
-        }
-        .group-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        .chat-container {
-            height: 300px;
-            background: #2a2a2a;
-            border-radius: 14px;
-            padding: 12px;
-            overflow-y: auto;
-            margin-bottom: 12px;
-        }
-        .message {
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .message .user {
-            font-weight: 600;
-            color: var(--accent);
-        }
-        .message-input {
-            display: flex;
-            gap: 8px;
-        }
-        .message-input input {
-            flex: 1;
-        }
-        .voice-btn {
-            background: var(--success);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            color: var(--text-muted);
-            padding: 16px 0;
-        }
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg: #f2f2f7;
-                --card: #ffffff;
-                --text: #000000;
-                --text-muted: #666666;
-                --border: #e5e5ea;
-            }
-            .result-link { background: #f0f0f0; }
+        :root{--bg:#111;--card:#1e1e1e;--accent:#007aff;--text:#fff;--muted:#aaa}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:20px;line-height:1.5}
+        .c{max-width:400px;width:100%;margin:auto}
+        .header{text-align:center;margin-bottom:30px}
+        .logo{width:80px;height:80px;background:var(--card);border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+        .logo svg{width:48px;height:48px;fill:var(--text)}
+        h1{font-size:24px;font-weight:600;margin-bottom:4px}
+        .sub{font-size:15px;color:var(--muted)}
+        .card{background:var(--card);border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:center}
+        .drop{border:2px dashed var(--muted);border-radius:14px;padding:40px 20px;cursor:pointer;transition:.2s;position:relative;margin-bottom:20px}
+        .drop:hover,.drop.drag{border-color:var(--accent);background:rgba(0,122,255,.05)}
+        .drop.drag{background:rgba(0,122,255,.1)}
+        .icon{width:48px;height:48px;margin:0 auto 12px;fill:var(--muted)}
+        .txt{font-size:16px;color:var(--text);margin-bottom:4px}
+        .hint{font-size:13px;color:var(--muted)}
+        input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+        .btn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px 24px;font-size:17px;font-weight:600;width:100%;cursor:pointer;transition:.2s;margin-top:10px;box-shadow:0 2px 6px rgba(0,122,255,.3)}
+        .btn:disabled{background:#444;cursor:not-allowed;box-shadow:none}
+        .info{margin-top:16px;font-size:14px;color:var(--muted);word-break:break-all}
+        .prog{height:4px;background:#333;border-radius:2px;margin:16px 0;overflow:hidden;display:none}
+        .bar{height:100%;background:var(--accent);width:0%;transition:width .3s}
+        .res{display:none;margin-top:20px}
+        .link{background:#2a2a2a;padding:12px;border-radius:10px;font-size:14px;word-break:break-all;margin:12px 0;color:var(--accent)}
+        .copy{background:#333;color:var(--text);border:none;border-radius:8px;padding:8px 16px;font-size:14px;margin-top:8px}
+        .install{display:inline-block;background:var(--accent);color:#fff;padding:14px 32px;border-radius:12px;font-size:17px;font-weight:600;text-decoration:none;margin:16px 0;box-shadow:0 2px 6px rgba(0,122,255,.3)}
+        .warn{font-size:13px;color:#ff9f0a;margin:16px 0;padding:12px;background:rgba(255,159,10,.1);border-radius:10px;border:1px solid rgba(255,159,10,.3)}
+        .footer{margin-top:40px;font-size:12px;color:var(--muted);text-align:center}
+        @media(prefers-color-scheme:light){
+            :root{--bg:#f2f2f7;--card:#fff;--text:#000;--muted:#666}
+            .link{background:#f0f0f0}
         }
     </style>
 </head>
 <body>
-    <div class="notch"></div>
-    <div class="container">
-        <div class="header">
-            <div class="logo">
-                <svg viewBox="0 0 100 100">
-                    <rect width="100" height="100" rx="20" fill="currentColor" opacity="0.1"/>
-                    <path d="M50 30c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 22c-4 0-8-4-8-8s4-8 8-8 8 4 8 8-4 8-8 8z" fill="currentColor"/>
-                </svg>
-            </div>
-            <h1>ShadowDrop Pro</h1>
-            <p class="subtitle">OTA Installer • Groups • Voice Chat</p>
+<div class="c">
+    <div class="header">
+        <div class="logo"><svg viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="currentColor" opacity=".1"/><path d="M50 30c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 22c-4 0-8-4-8-8s4-8 8-8 8 4 8 8-4 8-8 8z" fill="currentColor"/></svg></div>
+        <h1>ShadowDrop OTA</h1>
+        <p class="sub">Upload IPA → Instant OTA link (no signup)</p>
+    </div>
+
+    <div class="card">
+        <div class="drop" id="drop">
+            <input type="file" accept=".ipa" id="ipa"/>
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+            <div class="txt">Drop IPA or tap to select</div>
+            <div class="hint">Max 500 MB • OTA link generated automatically</div>
+        </div>
+        <div id="info" class="info" style="display:none;"></div>
+        <div class="prog" id="prog"><div class="bar" id="bar"></div></div>
+        <button class="btn" id="up" disabled>Upload &amp; Generate OTA</button>
+    </div>
+
+    <div class="card res" id="res">
+        <h3>OTA Install Ready!</h3>
+        <p>Tap the button below on your iPhone/iPad:</p>
+        <div class="link" id="otaLink"></div>
+        <button class="copy" id="copy">Copy OTA Link</button>
+        <a href="#" id="install" class="install" style="display:none;">Install Now</a>
+
+        <div class="warn">
+            <strong>Note:</strong> Unsigned IPAs need a signing tool (AltStore, Sideloadly, TrollStore, etc.).
         </div>
 
-        <div class="tabs">
-            <div class="tab active" data-tab="drop">Drop</div>
-            <div class="tab" data-tab="groups">Groups</div>
-            <div class="tab" data-tab="dashboard">Dashboard</div>
-        </div>
-
-        <!-- DROP TAB -->
-        <div id="drop" class="tab-content active">
-            <div class="card">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" placeholder="Enter username" />
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="password" placeholder="Enter password" />
-                </div>
-                <button class="btn" id="loginBtn">Login / Create Account</button>
-                <div id="authStatus" style="margin-top:10px; font-size:13px; color:var(--success); display:none;"></div>
-            </div>
-
-            <div class="card" id="uploadSection" style="display:none;">
-                <div class="upload-area" id="dropZone">
-                    <input type="file" accept=".ipa" id="ipaInput" />
-                    <div class="upload-text">Drop IPA here or tap to select</div>
-                    <div class="upload-hint">Auto-generates OTA • Shareable link</div>
-                </div>
-                <div id="fileDetails" class="file-info" style="display:none;"></div>
-                <div class="progress" id="progressContainer">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                <button class="btn" id="uploadBtn" disabled>Upload & Generate OTA</button>
-            </div>
-
-            <div class="card" id="resultCard" style="display:none;">
-                <h3>OTA Link Ready!</h3>
-                <p>Share this install link:</p>
-                <div class="result-link" id="installLink"></div>
-                <button class="copy-btn" id="copyBtn">Copy Link</button>
-                <a href="#" id="installBtn" class="btn" style="display:none; margin-top:12px;">Install Now</a>
-                <p style="font-size:13px; color:var(--text-muted); margin-top:16px;">
-                    Direct IPA: <span id="directLink" style="color:var(--accent);"></span>
-                </p>
-            </div>
-        </div>
-
-        <!-- GROUPS TAB -->
-        <div id="groups" class="tab-content">
-            <div class="card">
-                <h3>Explore Groups</h3>
-                <div id="groupList">
-                    <div class="group-card">
-                        <div>
-                            <div class="group-name">Dev Crew</div>
-                            <div class="group-meta">12 members • 3 online</div>
-                        </div>
-                        <button class="btn" style="padding:8px 16px; font-size:14px;">Join</button>
-                    </div>
-                    <div class="group-card">
-                        <div>
-                            <div class="group-name">Sideload Squad</div>
-                            <div class="group-meta">28 members • 8 online</div>
-                        </div>
-                        <button class="btn" style="padding:8px 16px; font-size:14px;">Join</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- DASHBOARD TAB -->
-        <div id="dashboard" class="tab-content">
-            <div class="card">
-                <h3>Create Group</h3>
-                <div class="form-group">
-                    <input type="text" id="groupName" placeholder="Group name" />
-                </div>
-                <button class="btn" id="createGroupBtn">Create</button>
-            </div>
-
-            <div class="card">
-                <h3>Voice & Text Chat</h3>
-                <div class="chat-container" id="chatMessages"></div>
-                <div class="message-input">
-                    <input type="text" id="chatInput" placeholder="Type a message..." />
-                    <button class="voice-btn" id="voiceBtn">🎤</button>
-                </div>
-            </div>
-        </div>
+        <p style="font-size:13px;color:var(--muted);margin-top:16px;">
+            Direct IPA: <span id="direct" style="color:var(--accent);"></span>
+        </p>
     </div>
 
     <div class="footer">
-        ShadowDrop Pro • Hosted on GitHub Pages • <a href="https://azurepixelfire6.github.io/shadow.drop/" style="color:var(--accent);">azurepixelfire6.github.io/shadow.drop</a>
+        ShadowDrop OTA • Free & Anonymous • Powered by <a href="https://pages.github.com" target="_blank" style="color:var(--accent);">GitHub Pages</a>
     </div>
+</div>
 
-    <script>
-        // === AUTH SYSTEM ===
-        const users = JSON.parse(localStorage.getItem('shadowdrop_users') || '{}');
-        let currentUser = null;
+<script>
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const fmt = b => {if(!b)return'0 B';const k=1024,s=['B','KB','MB','GB'],i=Math.floor(Math.log(b)/Math.log(k));return parseFloat((b/Math.pow(k,i)).toFixed(2))+' '+s[i];};
 
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            if (!username || !password) return alert('Fill in both fields');
+/* ---------- Drag & Drop ---------- */
+const drop = $('#drop'), ipa = $('#ipa'), up = $('#up'), info = $('#info'), prog = $('#prog'), bar = $('#bar');
+const res = $('#res'), otaLink = $('#otaLink'), direct = $('#direct'), copy = $('#copy'), install = $('#install');
 
-            if (users[username] && users[username] !== password) {
-                return alert('Wrong password');
-            }
+let file = null, ipaUrl = '', bundle = 'com.unknown.app', appName = '';
 
-            if (!users[username]) {
-                users[username] = password;
-                localStorage.setItem('shadowdrop_users', JSON.stringify(users));
-            }
+['dragenter','dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();}));
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.add('drag')));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('drag')));
 
-            currentUser = username;
-            document.getElementById('authStatus').textContent = `Logged in as ${username}`;
-            document.getElementById('authStatus').style.display = 'block';
-            document.getElementById('uploadSection').style.display = 'block';
-        });
+drop.addEventListener('drop',e=>handle(e.dataTransfer.files));
+ipa.addEventListener('change',()=>handle(ipa.files));
 
-        // === TABS ===
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            });
-        });
+function handle(files){
+    if(!files.length)return;
+    const f = files[0];
+    if(!f.name.toLowerCase().endsWith('.ipa'))return alert('Select an .ipa file');
+    file = f; appName = f.name.replace('.ipa','');
+    info.textContent = `${f.name} (${fmt(f.size)})`;
+    info.style.display='block';
+    up.disabled=false;
+}
 
-        // === DROP TAB ===
-        const dropZone = document.getElementById('dropZone');
-        const ipaInput = document.getElementById('ipaInput');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const fileDetails = document.getElementById('fileDetails');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const resultCard = document.getElementById('resultCard');
-        const installLink = document.getElementById('installLink');
-        const directLink = document.getElementById('directLink');
-        const copyBtn = document.getElementById('copyBtn');
-        const installBtn = document.getElementById('installBtn');
+/* ---------- Upload & OTA ---------- */
+up.addEventListener('click', async ()=>{
+    if(!file)return;
+    up.disabled=true; up.textContent='Uploading…';
+    prog.style.display='block'; bar.style.width='0%';
 
-        let selectedFile = null;
-        let appName = 'Unknown App';
-        let bundleId = 'com.unknown.app';
+    const fd = new FormData(); fd.append('file',file);
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-        });
+    try{
+        // 1. Upload IPA to a free file host that returns direct URL
+        //    We use **file.io** (no signup, 2 GB, 14-day link)
+        const r = await fetch('https://file.io/?expires=14d', {method:'POST',body:fd});
+        const j = await r.json();
+        if(!j.success) throw new Error('Upload failed');
+        ipaUrl = j.link;                               // direct IPA URL
+        direct.textContent = ipaUrl;
 
-        dropZone.addEventListener('drop', e => {
-            const files = e.dataTransfer.files;
-            handleFiles(files);
-        });
-        ipaInput.addEventListener('change', () => handleFiles(ipaInput.files));
+        // 2. Prompt for bundle ID (you can replace with auto-extract later)
+        const user = prompt('Enter Bundle ID (e.g. com.example.myapp):', bundle);
+        if(user) bundle = user;
 
-        function handleFiles(files) {
-            if (!files.length) return;
-            const file = files[0];
-            if (!file.name.toLowerCase().endsWith('.ipa')) return alert('Select an .ipa file');
-            selectedFile = file;
-            appName = file.name.replace('.ipa', '');
-            fileDetails.textContent = `${file.name} (${formatBytes(file.size)})`;
-            fileDetails.style.display = 'block';
-            uploadBtn.disabled = false;
-        }
-
-        function formatBytes(bytes) {
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        async function extractMetadata(file) {
-            const zip = await JSZip.loadAsync(file);
-            const infoPlistFile = Object.keys(zip.files).find(f => f.includes('Info.plist'));
-            if (!infoPlistFile) return { bundleId: 'com.unknown.app', appName: 'Unknown' };
-            const plistText = await zip.file(infoPlistFile).async('text');
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(plistText, 'text/xml');
-            const bid = xml.querySelector('key:contains("CFBundleIdentifier")')?.nextElementSibling?.textContent || bundleId;
-            const name = xml.querySelector('key:contains("CFBundleDisplayName")')?.nextElementSibling?.textContent ||
-                         xml.querySelector('key:contains("CFBundleName")')?.nextElementSibling?.textContent || appName;
-            return { bundleId: bid, appName: name };
-        }
-
-        uploadBtn.addEventListener('click', async () => {
-            if (!selectedFile || !currentUser) return;
-
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Processing...';
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '30%';
-
-            try {
-                const meta = await extractMetadata(selectedFile);
-                bundleId = meta.bundleId;
-                appName = meta.appName;
-
-                progressBar.style.width = '50%';
-
-                // Upload IPA
-                const ipaForm = new FormData();
-                ipaForm.append('file', selectedFile);
-                const ipaRes = await fetch('https://api.pagedrop.io/v1/upload', { method: 'POST', body: ipaForm });
-                const ipaData = await ipaRes.json();
-                if (!ipaData.url) throw new Error('IPA upload failed');
-                const ipaUrl = ipaData.url;
-
-                progressBar.style.width = '70%';
-
-                // Generate manifest.plist
-                const manifest = `<?xml version="1.0" encoding="UTF-8"?>
+        // 3. Build manifest.plist as a data-URI (no extra file needed)
+        const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -524,97 +141,48 @@
             <key>assets</key>
             <array>
                 <dict>
-                    <key>kind</key>
-                    <string>software-package</string>
-                    <key>url</key>
-                    <string>${ipaUrl}</string>
+                    <key>kind</key><string>software-package</string>
+                    <key>url</key><string>${ipaUrl}</string>
                 </dict>
             </array>
             <key>metadata</key>
             <dict>
-                <key>bundle-identifier</key>
-                <string>${bundleId}</string>
-                <key>kind</key>
-                <string>software</string>
-                <key>title</key>
-                <string>${appName}</string>
+                <key>bundle-identifier</key><string>${bundle}</string>
+                <key>kind</key><string>software</string>
+                <key>title</key><string>${appName}</string>
             </dict>
         </dict>
     </array>
 </dict>
-</plist>`;
+</plist>`.trim();
 
-                const manifestBlob = new Blob([manifest], { type: 'application/xml' });
-                const manifestForm = new FormData();
-                manifestForm.append('file', manifestBlob, `${appName.replace(/ /g, '')}.plist`);
+        const plistBlob = new Blob([plist],{type:'application/xml'});
+        const plistURL = URL.createObjectURL(plistBlob);
 
-                const manifestRes = await fetch('https://api.pagedrop.io/v1/upload', { method: 'POST', body: manifestForm });
-                const manifestData = await manifestRes.json();
-                if (!manifestData.url) throw new Error('Manifest upload failed');
-                const manifestUrl = manifestData.url;
+        // 4. OTA link
+        const ota = `itms-services://?action=download-manifest&url=${encodeURIComponent(plistURL)}`;
+        otaLink.textContent = ota;
+        install.href = ota;
+        install.style.display='inline-block';
+        res.style.display='block';
+        bar.style.width='100%';
+        setTimeout(()=>{prog.style.display='none';},600);
 
-                progressBar.style.width = '90%';
+    }catch(e){
+        alert('Upload failed – try again or use Diawi/InstallOnAir');
+        console.error(e);
+    }finally{
+        up.textContent='Upload & Generate OTA';
+        up.disabled=false;
+    }
+});
 
-                const otaUrl = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestUrl)}`;
-
-                installLink.textContent = otaUrl;
-                directLink.textContent = ipaUrl;
-                installBtn.href = otaUrl;
-                installBtn.style.display = 'block';
-                resultCard.style.display = 'block';
-
-                progressBar.style.width = '100%';
-                setTimeout(() => { progressContainer.style.display = 'none'; }, 600);
-
-                // Save to local shareable links
-                const links = JSON.parse(localStorage.getItem('shadowdrop_links') || '[]');
-                links.push({ user: currentUser, app: appName, ota: otaUrl, ipa: ipaUrl, time: new Date().toISOString() });
-                localStorage.setItem('shadowdrop_links', JSON.stringify(links));
-
-            } catch (err) {
-                alert('Upload failed: ' + err.message);
-            } finally {
-                uploadBtn.textContent = 'Upload & Generate OTA';
-                uploadBtn.disabled = false;
-            }
-        });
-
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(installLink.textContent);
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => copyBtn.textContent = 'Copy Link', 2000);
-        });
-
-        // === GROUPS & DASHBOARD ===
-        document.getElementById('createGroupBtn').addEventListener('click', () => {
-            const name = document.getElementById('groupName').value.trim();
-            if (!name) return alert('Enter group name');
-            const groupHtml = `<div class="group-card">
-                <div>
-                    <div class="group-name">${name}</div>
-                    <div class="group-meta">1 member • You</div>
-                </div>
-                <button class="btn" style="padding:8px 16px; font-size:14px;">Owner</button>
-            </div>`;
-            document.getElementById('groupList').insertAdjacentHTML('afterbegin', groupHtml);
-            document.getElementById('groupName').value = '';
-        });
-
-        // Simple chat
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        chatInput.addEventListener('keypress', e => {
-            if (e.key === 'Enter' && chatInput.value.trim()) {
-                const msg = `<div class="message"><span class="user">${currentUser || 'Guest'}:</span> ${chatInput.value}</div>`;
-                chatMessages.insertAdjacentHTML('beforeend', msg);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                chatInput.value = '';
-            }
-        });
-
-        document.getElementById('voiceBtn').addEventListener('click', () => {
-            alert('Voice chat: Hold to speak (WebRTC not enabled in static HTML)');
-        });
-    </script>
+/* ---------- Copy ---------- */
+copy.addEventListener('click',()=>{
+    navigator.clipboard.writeText(otaLink.textContent);
+    copy.textContent='Copied!';
+    setTimeout(()=>copy.textContent='Copy OTA Link',2000);
+});
+</script>
 </body>
 </html>
